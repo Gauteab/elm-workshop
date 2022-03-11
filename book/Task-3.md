@@ -126,7 +126,7 @@ and the response will look something like this (if you are on the "Modelling in 
 
 We see that the endpoint returns a list of comments,
 and that each comment has a three fields: `id`, `username`, and `text`,
-all of with are strings.
+all of which are strings.
 
 To get access to these comments, we are going to have to decode them.
 Simply put, decoding is Elm's way of guaranteeing that the JSON data we get from a server
@@ -182,7 +182,7 @@ so import add the following two lines to the imports:
     So the constructor called `CommentInfo` is just a function with the type signature:
 
     ```elm
-    CommentInfo: String -> String -> CommentInfo
+    CommentInfo : String -> String -> CommentInfo
     ```
 
     The `required` lines below then pick out the values from the fields in the JSON object
@@ -281,12 +281,13 @@ you should see an actual list of comments in the model after the comments are fi
 
 
 ## Task 3.3: A view for the comments
+The time has come to add the comments to our view!
 
+Below is an example of a hardcoded view consisting of three comments.
 ```elm
+someComments =
     div [ class "comment-section" ]
-        [ h2 []
-            [ text "3 comments"
-            ]
+        [ h2 [] [ text "3 comments" ]
         , div [ class "comments" ]
             [ div [ class "comment" ]
                 [ div [ class "comment-username" ]
@@ -301,13 +302,17 @@ you should see an actual list of comments in the model after the comments are fi
                     [ text "Text of the second comment" ]
                 ]
             ]
-        , viewWriteComment model
         ]
 ```
 
+Create a function `viewComments : CommentsState -> Html msg`,
+and a function `viewComment : Comment -> Html msg`, and add `, viewComments successModel.comments`
+to `viewSuccess` in order to render all the comments above the comment input box.
+
 ## Task 3.4: Updating the list of comments after a post
 
-You can use the response from the POST request, to update the model.
+Use the response from the POST request to update the model such that new comments
+appear right away without having to refresh the page.
 
 ## Task 3.5: Nested comments
 
