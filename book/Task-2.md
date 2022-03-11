@@ -160,7 +160,7 @@ post : { url : String , body : Body , expect : Expect msg } -> Cmd msg
 
 The `post` function takes one argument, which is a record with three fields:
 `url`, `body`, and `expect`.
-The `url` field is just a `String`, which is pretty straight foreward.
+The `url` field is just a `String`, which is pretty straight forward.
 The `body` field is a `Body`, which the `Http` module has functions for creating.
 And the `expect` field is of type `Expect msg`, which is a type in the `Http` module
 describing what we expect the server to return as a response to our request.
@@ -366,7 +366,7 @@ Add the argument, and use it in the url.
     And while that might seem natural,
     that would actually result in another compilation error,
     because it would cause a sircular dependency in our app
-    (meaning that the article page imports APi, which imports article page, which imports API, and so on).
+    (meaning that the article page imports API, which imports article page, which imports API, and so on).
     But even if we _could_ do that, it wouldn't actually be such a good idea,
     because it would couple the function for creating a comment to the article page.
     That would mean that other modules couldn't really use that function,
