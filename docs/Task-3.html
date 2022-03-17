@@ -1,0 +1,568 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <title>Task 3 · HonKit</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="HonKit 3.7.1">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    
+    <link rel="prev" href="Task-2.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book honkit-cloak">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        <li class="header">Elm workshop</li>
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="Task-1.html">
+            
+                <a href="Task-1.html">
+            
+                    
+                    Task 1
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="Task-2.html">
+            
+                <a href="Task-2.html">
+            
+                    
+                    Task 2
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.4" data-path="Task-3.html">
+            
+                <a href="Task-3.html">
+            
+                    
+                    Task 3
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://github.com/honkit/honkit" target="blank" class="gitbook-link">
+            Published with HonKit
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Task 3</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="task-3---fetching-comments-from-the-server">Task 3 - Fetching comments from the server</h1>
+<p>As we saw at the end of the last task,
+the server actually returned some comments as a response,
+when we created a new comment.
+What we didn&apos;t see is that the server also has an endpoint to fetch all the comments on an article.</p>
+<p>In this task we will make a request to the endpoint when the page loads,
+and display the comments on an article to the user.
+We will also update the list of comments when the user posts a new comment.</p>
+<h2 id="task-31-making-a-get-request">Task 3.1: Making a GET request</h2>
+<p>We start by preparing our model for the new state:</p>
+<p>Similarly to the model for the entire page,
+we will create a custom type representing the state of the comments we are fetching.
+We could choose to do this in other ways, but we want to achieve the following things with our model:</p>
+<ul>
+<li>Represent that fetching the comments either is in progress, has failed or has succeeded.</li>
+<li>Allow for the page to display the article, regardless of whether fetching the comments failed.</li>
+</ul>
+<p>Other priorities will result in another representation.</p>
+<ol>
+<li><p>Create a new custom type in the page we have been working on (<code>src/Page/Article</code>),
+with the following definition:</p>
+<pre><code class="lang-elm"> <span class="hljs-keyword">type</span> <span class="hljs-type">CommentsState</span>
+     = <span class="hljs-type">LoadingComments</span>
+     | <span class="hljs-type">FailureGettingComments</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span>
+     | <span class="hljs-type">SucceededGettingComments</span> (<span class="hljs-type">List</span> <span class="hljs-type">Comment</span>)
+</code></pre>
+<p> You will need to import the <code>Comment</code> type, using the following line:</p>
+<pre><code class="lang-elm"> <span class="hljs-keyword">import</span> Comment <span class="hljs-keyword">exposing</span> (<span class="hljs-type">Comment</span>)
+</code></pre>
+</li>
+<li><p>Next, add a field <code>comments</code> to <code>SuccessModel</code>, with the type <code>CommentsState</code>,
+and follow the compilation errors until your code compiles.</p>
+</li>
+<li><p>In this task we will save the view to the end, so we continue by making the request to the server.
+To do this, we start by making another message, for when fetching the comments is done.
+The message can be identical to <code>SavingCommentFinished</code>,
+except that you call it <code>FetchingCommentsFinished</code>.
+Add <code>FetchingCommentsFinished</code> to <code>Msg</code>,
+and make the required changes to the <code>update</code> function.
+You can start by returning <code>( model, Cmd.none )</code> from <code>update</code>.</p>
+</li>
+<li><p>Now that your code compiles with the new message,
+we can handle the message a bit more correctly in <code>update</code>.
+Instead of just returning directly <code>( model, Cmd.none )</code>,
+add a case statement on <code>model</code> to check that we are in the <code>Success</code> state of the page.</p>
+</li>
+<li><p>Then add another case statement inside the <code>Success</code> case to check whether the <code>Result</code>
+we got in the message was <code>Ok</code> or <code>Err</code>. Set the <code>comments</code> field in <code>SuccessModel</code> accordingly
+(you can just hard code an empty list in the <code>Ok</code> case for now).</p>
+</li>
+<li><p>Next, we will create a function in the <code>Api</code> module,
+similar to the <code>createCommentOnArticle</code> we added in Task 2.4.
+Name the function <code>getComments</code> , with the following type signature:</p>
+<pre><code class="lang-elm"> getComments : (<span class="hljs-type">Result</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span> () -&gt; msg) -&gt; <span class="hljs-type">ArticleId</span> -&gt; <span class="hljs-type">Cmd</span> msg
+</code></pre>
+<p> And use the <code>Http.get</code> function to make the request,
+ and the URL to the comment endpoint is <code>/api/article/{articleId}/comments</code>,
+ where <code>{articleId}</code> is the article ID of the article you just fetched.</p>
+<p> <code>Http.get</code> is similar <code>Http.post</code>, except that it doesn&apos;t have a <code>body</code>.
+ You can read it&apos;s documentation <a href="https://package.elm-lang.org/packages/elm/http/latest/Http#get" target="_blank">here</a>,
+ and you can use <code>Http.expectWhatever</code>, like we did in <code>createCommentOnArticle</code>.</p>
+</li>
+<li><p>We will now use the function we just created,
+and we are going to make the request for comments when the <code>update</code> function
+receives the message <code>FetchedArticle</code>.
+Replace <code>Cmd.none</code> with the function call to <code>getComments</code> in the case for <code>FetchedArticle</code>.</p>
+</li>
+</ol>
+<p>In the browser, you should now see that the app makes a request to the comments endpoint.
+You can see it in both the Elm debugger, and in the Network tab in the browser.</p>
+<p>Note: This isn&apos;t the most efficient place to make the request,
+since it will make the page wait for the article response before fetching the comments,
+instead of doing the two request simultaneously.
+In an optional task later,
+you can try to change the app to handle making the requests at the same time.
+But for now, we will go ahead with this strategy.</p>
+<h2 id="task-32-decoding-the-comment-response">Task 3.2: Decoding the comment response</h2>
+<p>As you can see in the browser,
+the app now make a request to the comments endpoint,
+and the response will look something like this (if you are on the &quot;Modelling in Elm&quot; page):</p>
+<pre><code class="lang-json">[
+  {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;q6dkYsTwdX&quot;</span>,
+    <span class="hljs-string">&quot;username&quot;</span>: <span class="hljs-string">&quot;User 1&quot;</span>,
+    <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;Functional programming SUXXX!&quot;</span>
+  },
+  {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3ABrq4hXB_&quot;</span>,
+    <span class="hljs-string">&quot;username&quot;</span>: <span class="hljs-string">&quot;User 2&quot;</span>,
+    <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;No, you suck!!&quot;</span>
+  },
+  {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;keJKsI_jHl&quot;</span>,
+    <span class="hljs-string">&quot;username&quot;</span>: <span class="hljs-string">&quot;User 3&quot;</span>,
+    <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;I like him!&quot;</span>
+  },
+  {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;5OOsLzU_mw&quot;</span>,
+    <span class="hljs-string">&quot;username&quot;</span>: <span class="hljs-string">&quot;User 4&quot;</span>,
+    <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;I agree&quot;</span>
+  },
+  {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;LQb3OY4w19&quot;</span>,
+    <span class="hljs-string">&quot;username&quot;</span>: <span class="hljs-string">&quot;User 5&quot;</span>,
+    <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;I like modifying global variables 😊&quot;</span>
+  }
+]
+</code></pre>
+<p>We see that the endpoint returns a list of comments,
+and that each comment has a three fields: <code>id</code>, <code>username</code>, and <code>text</code>,
+all of which are strings.</p>
+<p>To get access to these comments, we are going to have to decode them.
+Simply put, decoding is Elm&apos;s way of guaranteeing that the JSON data we get from a server
+is actually in the shape that we expect.</p>
+<p>To decode the list of comments,
+we are first going to have to make a decoder for the <code>Comment</code> type.
+<code>Comment</code> is already defined in the <code>Comment</code> module in the file <code>src/Comment.elm</code>,
+where you can take a look at it.</p>
+<p>We can see that a <code>Comment</code> is a one-constructor union type, with three fields:
+<code>id</code>, <code>username</code>, and <code>text</code>,
+the first of which is of type <code>CommentId</code>,
+while the remaining two are of type <code>String</code>.</p>
+<p>This lines up quite well with what we are seeing in the response from the server,
+except that the <code>id</code> field is a <code>CommentId</code>.
+But actually, we don&apos;t have to decode every field we receive in a JSON object,
+so we can start by removing the <code>id</code> field, to make our job a bit easier.</p>
+<ol>
+<li><p>Remove the <code>id</code> field from the <code>CommentInfo</code> record.</p>
+</li>
+<li><p>To make a decoder for <code>Comment</code>, we are going to need a couple of packages,
+so import add the following two lines to the imports:</p>
+<pre><code class="lang-elm"> <span class="hljs-keyword">import</span> Json.Decode <span class="hljs-keyword">exposing</span> (<span class="hljs-type">Decoder</span>)
+ <span class="hljs-keyword">import</span> Json.Decode.Pipeline <span class="hljs-keyword">exposing</span> (optional, required)
+</code></pre>
+<p> The decoder we are going to make, is going to have the type signature <code>Decoder Comment</code>.
+ A decoder is sort of like a recipe for how the JSON should look.
+ It is not function.
+ But before we make our <code>Comment</code> decoder, we are going to make a decoder for <code>CommentInfo</code>.</p>
+</li>
+<li><p>Paste in the following code at the bottom of the file:</p>
+<pre><code class="lang-elm"> commentInfoDecoder : <span class="hljs-type">Decoder</span> <span class="hljs-type">CommentInfo</span>
+ commentInfoDecoder =
+     <span class="hljs-type">Json</span>.<span class="hljs-type">Decode</span>.succeed <span class="hljs-type">CommentInfo</span>
+         |&gt; required <span class="hljs-string">&quot;text&quot;</span> <span class="hljs-type">Json</span>.<span class="hljs-type">Decode</span>.string
+         |&gt; required <span class="hljs-string">&quot;username&quot;</span> <span class="hljs-type">Json</span>.<span class="hljs-type">Decode</span>.string
+</code></pre>
+<p> Note: This isn&apos;t very easy to understand the first time you see it,
+ and you really don&apos;t need to understand what&apos;s going on here to continue with the tasks.
+ So read the brief explanation below, and move on to the next task.</p>
+<p> The code above uses the fact that type aliases for records automatically get
+ a constructor of the same name as the type alias (<code>CommentInfo</code> in this case),
+ where the arguments to the constructor are in the same order as the fields in the type alias.
+ So the constructor called <code>CommentInfo</code> is just a function with the type signature:</p>
+<pre><code class="lang-elm"> <span class="hljs-type">CommentInfo</span> : <span class="hljs-type">String</span> -&gt; <span class="hljs-type">String</span> -&gt; <span class="hljs-type">CommentInfo</span>
+</code></pre>
+<p> The <code>required</code> lines below then pick out the values from the fields in the JSON object
+ called &quot;text&quot; and &quot;username&quot;, respectively, and decode the values in the those fields as strings
+ (that&apos;s the <code>Json.Decode.string</code> part).
+ The two resulting strings are then passed to the <code>CommentInfo</code> constructor in the order they are in,
+ and the result is a <code>Decoder CommentInfo</code>.</p>
+<p> This is a simplefied explanation, so if you&apos;re thinking &quot;that&apos;s not entirely correct&quot;,
+ then you are right.
+ But it is sufficient for now.</p>
+</li>
+<li><p>We now have a <code>Decoder CommentInfo</code>, but what we ultimately need is a <code>Decoder Comment</code>.
+To get that we are going to use <a href="https://package.elm-lang.org/packages/elm/json/latest/Json-Decode#map" target="_blank"><code>Json.Decode.map</code></a>.
+<code>map</code> has the following type signature:</p>
+<pre><code class="lang-elm"><span class="hljs-title">map</span> : (a -&gt; value) -&gt; <span class="hljs-type">Decoder</span> a -&gt; <span class="hljs-type">Decoder</span> value
+</code></pre>
+<p>In our case, we want to end up with a <code>Decoder Comment</code>,
+so <code>value</code> in the type signature is our <code>Comment</code>.
+<code>a</code> in this type signature is going to be our <code>CommentInfo</code>,
+since that is the decoder that we already have.
+If we write out the type signature again using our types, we get the following type signature:</p>
+<pre><code class="lang-elm"><span class="hljs-title">map</span> : (<span class="hljs-type">CommentInfo</span> -&gt; <span class="hljs-type">Comment</span>) -&gt; <span class="hljs-type">Decoder</span> <span class="hljs-type">CommentInfo</span> -&gt; <span class="hljs-type">Decoder</span> <span class="hljs-type">Comment</span>
+</code></pre>
+<p>The second argument to <code>map</code> is going to be <code>commentInfoDecoder</code>,
+so what we need is the first argument,
+a function that takes a <code>CommentInfo</code> as an argument and returns a <code>Comment</code>.
+And actually, the one constructor in the <code>Comment</code> type is the function.
+It takes one argument, which is a <code>CommentInfo</code>, and returns a <code>Comment</code>.</p>
+<p>Given all that, we can add the following decoder for <code>Comment</code>:</p>
+<pre><code class="lang-elm"><span class="hljs-title">decoder</span> : <span class="hljs-type">Decoder</span> <span class="hljs-type">Comment</span>
+<span class="hljs-title">decoder</span> =
+    <span class="hljs-type">Json</span>.<span class="hljs-type">Decode</span>.map <span class="hljs-type">Comment</span> commentInfoDecoder
+</code></pre>
+</li>
+<li><p>To use the decoder outside the <code>Comment</code> module, we are going to have to expose it.
+Add <code>decoder</code> to the list exposed by the <code>Comment</code> module.</p>
+<p> Next, we are going to actually use the decoder to get the comments
+ that the comments endpoint returns.</p>
+</li>
+<li><p>In the <code>Api</code> module, in the <code>getComments</code> function,
+replace the call to <code>Http.expectWhatever</code> with the following line
+(your code won&apos;t compile anymore, but we will fix that in the next steps):</p>
+<pre><code class="lang-elm"> <span class="hljs-type">Http</span>.expectJson msg (<span class="hljs-type">Json</span>.<span class="hljs-type">Decode</span>.list <span class="hljs-type">Comment</span>.decoder)
+</code></pre>
+<p> This line is saying that we no longer don&apos;t care about what the server returns,
+ we now expect the endpoint to return JSON.
+ We also say that the JSON should be decoded with decoder defined as <code>Json.Decode.list Comment.decoder</code>.
+ <code>Comment.decoder</code> is the decoder we just made,
+ and <code>Json.Decode.list</code> is a way to make a decoder for a list of a certain type.
+ The decoder we pass to <code>expectJson</code> is therefore of type <code>Decoder (List Comment)</code>
+ which is what we actually expect the endpoint to return.</p>
+</li>
+<li><p>The compilation error we now get,
+says that the second argument to <code>expectJson</code> is not what the compiler expects.
+However, the second argument (the decoder) is exactly what we want to pass to <code>expectJson</code>.
+The thing we actually want to change is the type of the <code>msg</code> argument.
+Change the type of the first argument, in the type signature of <code>getComments</code> to the following
+(this will result in another compilation error):</p>
+<pre><code class="lang-elm"> (<span class="hljs-type">Result</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span> (<span class="hljs-type">List</span> <span class="hljs-type">Comment</span>) -&gt; msg)
+</code></pre>
+<p> We have now changed what type of message the <code>getComments</code> function accepts,
+ since a successful call to the comments endpoint now results in a list of comments.</p>
+</li>
+<li><p>The compiler still complains, but this time the compilation error is in <code>src/Page/Article</code>,
+since we are now calling <code>getComments</code> with the wrong first argument.
+Fix this error by changing <code>FetchingCommentsFinished</code> in <code>Msg</code> to be of the type that
+<code>getComments</code> expects.</p>
+<p> After fixing this, your code should compile.
+ And if you check the Elm debugger in the browser,
+ you will see that you actually receive a message with a list of comments!</p>
+</li>
+<li><p>You can now change the hard coding we did earlier in the <code>FetchingCommentsFinished</code> case
+in <code>update</code>, so that we put the actual list of comments in the model,
+instead of always using the empty list.</p>
+</li>
+</ol>
+<p>If you check the Elm debugger in the browser now,
+you should see an actual list of comments in the model after the comments are finished loading.</p>
+<h2 id="task-33-a-view-for-the-comments">Task 3.3: A view for the comments</h2>
+<p>The time has come to add the comments to our view!</p>
+<p>Below is an example of a hardcoded view consisting of three comments.</p>
+<pre><code class="lang-elm"><span class="hljs-title">someComments</span> =
+    div [ class <span class="hljs-string">&quot;comment-section&quot;</span> ]
+        [ h2 [] [ text <span class="hljs-string">&quot;3 comments&quot;</span> ]
+        , div [ class <span class="hljs-string">&quot;comments&quot;</span> ]
+            [ div [ class <span class="hljs-string">&quot;comment&quot;</span> ]
+                [ div [ class <span class="hljs-string">&quot;comment-username&quot;</span> ]
+                    [ text <span class="hljs-string">&quot;User 1&quot;</span> ]
+                , div [ class <span class="hljs-string">&quot;comment-text&quot;</span> ]
+                    [ text <span class="hljs-string">&quot;Text of the first comment&quot;</span> ]
+                ]
+            , div [ class <span class="hljs-string">&quot;comment&quot;</span> ]
+                [ div [ class <span class="hljs-string">&quot;comment-username&quot;</span> ]
+                    [ text <span class="hljs-string">&quot;User 2&quot;</span> ]
+                , div [ class <span class="hljs-string">&quot;comment-text&quot;</span> ]
+                    [ text <span class="hljs-string">&quot;Text of the second comment&quot;</span> ]
+                ]
+            ]
+        ]
+</code></pre>
+<p>Create a function <code>viewComments : CommentsState -&gt; Html msg</code>,
+and a function <code>viewComment : Comment -&gt; Html msg</code>, and add <code>, viewComments successModel.comments</code>
+to <code>viewSuccess</code> in order to render all the comments above the comment input box.</p>
+<h2 id="task-34-updating-the-list-of-comments-after-a-post">Task 3.4: Updating the list of comments after a post</h2>
+<p>Use the response from the POST request to update the model such that new comments
+appear right away without having to refresh the page.</p>
+<h2 id="task-35-nested-comments">Task 3.5: Nested comments</h2>
+<p>The comments you get in the response when posting a comment are nested:
+each comment has a field <code>comments</code>, which is a new list of comments.
+Use the endpoint <code>/api/article/{articleId}/nestedComments</code>,
+in <code>Api.getComments</code> to get nested comments.
+Decode the comments with subcomments.</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="Task-2.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Task 2">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Task 3","level":"1.4","depth":1,"previous":{"title":"Task 2","level":"1.3","depth":1,"path":"Task-2.md","ref":"Task-2.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56},"embedFonts":false},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Task-3.md","mtime":"2022-03-17T11:04:51.082Z","type":"markdown"},"gitbook":{"version":"3.7.1","time":"2022-03-17T12:04:00.518Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <noscript>
+        <style>
+            .honkit-cloak {
+                display: block !important;
+            }
+        </style>
+    </noscript>
+    <script>
+        // Restore sidebar state as critical path for prevent layout shift
+        function __init__getSidebarState(defaultValue){
+            var baseKey = "";
+            var key = baseKey + ":sidebar";
+            try {
+                var value = localStorage[key];
+                if (value === undefined) {
+                    return defaultValue;
+                }
+                var parsed = JSON.parse(value);
+                return parsed == null ? defaultValue : parsed;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        function __init__restoreLastSidebarState() {
+            var isMobile = window.matchMedia("(max-width: 600px)").matches;
+            if (isMobile) {
+                // Init last state if not mobile
+                return;
+            }
+            var sidebarState = __init__getSidebarState(true);
+            var book = document.querySelector(".book");
+            // Show sidebar if it enabled
+            if (sidebarState && book) {
+                book.classList.add("without-animation", "with-summary");
+            }
+        }
+
+        try {
+            __init__restoreLastSidebarState();
+        } finally {
+            var book = document.querySelector(".book");
+            book.classList.remove("honkit-cloak");
+        }
+    </script>
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
