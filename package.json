@@ -4,7 +4,9 @@
   "description": "",
   "scripts": {
     "start": "node server.js",
-    "postinstall": "elm-tooling install"
+    "postinstall": "elm-tooling install",
+    "book": "honkit serve",
+    "build:book": "honkit build ./book ./docs"
   },
   "author": "Aksel Wester",
   "license": "ISC",
@@ -17,6 +19,7 @@
     "yaml": "1.7.2"
   },
   "devDependencies": {
+    "honkit": "^3.7.1",
     "elm-tooling": "^1.6.0",
     "less": "^3.12.2",
     "node-elm-compiler": "^5.0.4"
