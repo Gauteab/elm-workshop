@@ -19,8 +19,11 @@
     "yaml": "1.7.2"
   },
   "devDependencies": {
-    "honkit": "^3.7.1",
+    "elm": "^0.19.1-5",
+    "elm-format": "^0.8.5",
+    "elm-test": "^0.19.1-revision7",
     "elm-tooling": "^1.6.0",
+    "honkit": "^3.7.1",
     "less": "^3.12.2",
     "node-elm-compiler": "^5.0.4"
   }
