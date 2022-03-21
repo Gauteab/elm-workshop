@@ -1,0 +1,641 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <title>Task 2 · HonKit</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="HonKit 3.7.1">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="Task-3.html" />
+    
+    
+    <link rel="prev" href="Task-1.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book honkit-cloak">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="Task-1.html">
+            
+                <a href="Task-1.html">
+            
+                    
+                    Task 1
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3" data-path="Task-2.html">
+            
+                <a href="Task-2.html">
+            
+                    
+                    Task 2
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="Task-3.html">
+            
+                <a href="Task-3.html">
+            
+                    
+                    Task 3
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://github.com/honkit/honkit" target="blank" class="gitbook-link">
+            Published with HonKit
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Task 2</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="task-2---sending-the-comment-to-the-server">Task 2 - Sending the comment to the server</h1>
+<p>We are now able to view and update a string,
+containing the text that a user wants to comment on the article.
+But commenters also want <em>other people</em> to view their comments,
+so we therefore have to send the comments in the model to the server,
+so it can be stored there, and served to other users.</p>
+<p>Before we start with sending the comment to the server,
+we will change how we represent our comment in the model,
+so that we allow for all the states we plan to implement.</p>
+<h2 id="task-21-a-custom-type-for-new-comments">Task 2.1: A custom type for new comments</h2>
+<p>It is often useful to create custom types to represent a part of the app state,
+for instance when fetching or sending data to and from the server is involved.
+When making such a custom type, it is useful to take a couple of minutes to consider
+what states we want to enable in our app, and how best to represent those states.</p>
+<p>On this page we have a text area for commenting that we always want to be visible.
+When the user wants to post their comment, they will click a button to send their comment to the server.
+There will then be some delay while the request is processed by the server,
+this might take a couple of milliseconds or multiple seconds,
+depending on a lot of factors (the users Internet speed, the speed of the server etc.),
+so we should account for this state, even though the delay will be very short while developing.
+After some time the server will respond to our request, with either a response or an error.
+We therefore need a state for the error case,
+but we actually won&apos;t need a state for the success case:
+in that case we can just go back to the initial state.</p>
+<p>Given the reasoning above, we could make a custom type like this to represent our comment state:</p>
+<pre><code class="lang-elm"><span class="hljs-keyword">type</span> <span class="hljs-type">NewCommentState</span>
+    = <span class="hljs-type">WritingComment</span>
+    | <span class="hljs-type">SavingComment</span>
+    | <span class="hljs-type">ErrorSavingComment</span>
+</code></pre>
+<p>This is a good starting point, but we want to add some additional stuff to our type.
+We might, for instance, want to give the user some feedback about <em>what</em> went wrong
+in the case of an error
+(did the user lose their internet connection? Or maybe we just couldn&apos;t parse the response).
+We will also add the comment text string to our comment state.
+We will start by adding a <code>String</code> to each of the possible states,
+but we will change this string to something else later.</p>
+<ol>
+<li><p>Paste in the following custom type in <code>src/Page/Article.elm</code>:</p>
+<pre><code class="lang-elm"> <span class="hljs-keyword">type</span> <span class="hljs-type">NewCommentState</span>
+     = <span class="hljs-type">WritingComment</span> <span class="hljs-type">String</span>
+     | <span class="hljs-type">SavingComment</span> <span class="hljs-type">String</span>
+     | <span class="hljs-type">ErrorSavingComment</span> <span class="hljs-type">String</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span>
+</code></pre>
+<p> If you get a compilation error, you might want to add the following line to toward the top of the file:</p>
+<pre><code class="lang-elm"> <span class="hljs-keyword">import</span> Http
+</code></pre>
+</li>
+<li><p>Add a field <code>newCommentState: NewCommentState</code> to <code>SuccessModel</code>,
+and follow the compilation errors until your code compiles.
+(Don&apos;t delete the <code>commentText</code> field quite yet!
+It is easier to do this change in multiple steps)</p>
+</li>
+<li><p>Add a case statement to the <code>viewWriteComment</code> function, like the following code,
+where you replace <code>...</code> with the previous body of the <code>viewWriteComment</code> function.</p>
+<pre><code class="lang-elm"> viewWriteComment : <span class="hljs-type">SuccessModel</span> -&gt; <span class="hljs-type">Html</span> <span class="hljs-type">Msg</span>
+ viewWriteComment successModel =
+     <span class="hljs-keyword">case</span> successModel.newCommentState <span class="hljs-keyword">of</span>
+         <span class="hljs-type">WritingComment</span> commentText -&gt;
+            ...
+
+         _ -&gt;
+             text <span class="hljs-string">&quot;&quot;</span>
+</code></pre>
+<p> (<code>text &quot;&quot;</code> returns HTML without any content,
+ and is useful when you don&apos;t want your view function to display anything)</p>
+</li>
+<li><p>Change from using the <code>commentText</code> field in <code>successModel</code>
+to using <code>commentText</code> from the comment state.
+(You should change the line above <code>|&gt; Textarea.textarea { ... }</code>)</p>
+<p> When using your app now, typing in the comment field won&apos;t result in visible changes.
+ To make that work again, we have to change the <code>update</code> function.</p>
+</li>
+<li><p>Add a new case statement in the success case for <code>CommentUpdated</code> in the update function,
+that checks that the comment state is <code>WritingComment</code>.</p>
+<pre><code class="lang-elm"> <span class="hljs-type">CommentUpdated</span> string -&gt;
+     <span class="hljs-keyword">case</span> model <span class="hljs-keyword">of</span>
+         <span class="hljs-type">Success</span> successModel -&gt;
+             <span class="hljs-comment">--- Add case statement here</span>
+</code></pre>
+</li>
+<li><p>If you didn&apos;t do it in the previous step:
+change from updating the <code>commentText</code> field to updating <code>newCommentState</code> with the string from the message.</p>
+<p> Your app should now work exactly like it did before we introduced <code>newCommentState</code>,
+ and the <code>commentText</code> field should only be initialized in <code>init</code>, but never read or changed.
+ It&apos;s therefore now safe and easy to delete the field!</p>
+</li>
+<li><p>Delete the <code>commentText</code> field from the <code>SuccessModel</code> type alias,
+and follow the compilation errors until your code compiles again.</p>
+</li>
+</ol>
+<p>By making small changes, we have refactored a part of our code
+in a way that enable us to add some functionality in the tasks to come.
+This is a useful technique in Elm, because even though the compiler has our back,
+small changes make it easier to make big changes.</p>
+<h2 id="task-22-adding-a-post-button">Task 2.2: Adding a Post button</h2>
+<p>Next, we will add a button that the user can click to post their comment.</p>
+<ol>
+<li><p>Add a new message <code>PostCommentButtonClicked</code> to the <code>Msg</code> type
+(the message shouldn&apos;t have any arguments),
+and add a case for the new message in the <code>update</code> function.
+You can just return <code>( model, Cmd.none )</code> from <code>update</code> in that case.</p>
+</li>
+<li><p>Add the following code to <code>viewWriteComment</code>, after the <code>TextArea</code>:</p>
+<pre><code class="lang-elm"> <span class="hljs-type">Container</span>.buttonRow
+     [ <span class="hljs-type">Button</span>.button <span class="hljs-type">PostCommentButtonClicked</span> <span class="hljs-string">&quot;Post&quot;</span>
+         |&gt; <span class="hljs-type">Button</span>.toHtml
+     ]
+</code></pre>
+<p>The <code>Container.buttonRow</code> is just to make the layout right.</p>
+</li>
+</ol>
+<p>That&apos;s it for adding the button.
+You can check that the right message is sent in the Elm debugger in the browser.
+Next, we will actually make the request to the server!</p>
+<p>By the way, we won&apos;t come back to the view for the <code>SavingComment</code> and <code>ErrorSavingComment</code> states,
+so if you want, you can try to implement those on your own.
+The <code>Button</code> module has a function for adding a spinner, which you could use in the loading state.
+To test the views for the different states, you could change the state in <code>init</code>,
+since we haven&apos;t implemented that yet.</p>
+<h2 id="task-23-making-a-request-to-the-server">Task 2.3: Making a request to the server</h2>
+<p>To post a comment to the server, we are going to be making an HTTP request.
+The server expects a <code>POST</code> request to the URL <code>/api/article/{articleId}/comments</code>
+where <code>{articleId}</code> is the ID of the article the user is commenting on.
+The server expects the request to have a body that looks like this:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;The text of the comment.&quot;</span>
+}
+</code></pre>
+<p>We will go through how to construct this request piece by piece.</p>
+<p>The Http-package in Elm has a function for creating a POST request with the following type signature:</p>
+<pre><code class="lang-elm"><span class="hljs-title">post</span> : { url : <span class="hljs-type">String</span> , body : <span class="hljs-type">Body</span> , expect : <span class="hljs-type">Expect</span> msg } -&gt; <span class="hljs-type">Cmd</span> msg
+</code></pre>
+<p>The <code>post</code> function takes one argument, which is a record with three fields:
+<code>url</code>, <code>body</code>, and <code>expect</code>.
+The <code>url</code> field is just a <code>String</code>, which is pretty straight forward.
+The <code>body</code> field is a <code>Body</code>, which the <code>Http</code> module has functions for creating.
+And the <code>expect</code> field is of type <code>Expect msg</code>, which is a type in the <code>Http</code> module
+describing what we expect the server to return as a response to our request.
+The function returns a <code>Cmd msg</code>.</p>
+<p>Since calling the <code>post</code> function will give us <code>Cmd msg</code>,
+we can use that <code>Cmd</code> as the second part of the tuple we return from <code>update</code>,
+where we have just return <code>Cmd.none</code> until now.</p>
+<p>To make the most minimal <code>POST</code> request we can (that doesn&apos;t actually do what we want yet),
+we can use the following code:</p>
+<pre><code class="lang-elm"><span class="hljs-type">Http</span>.post
+    { url = <span class="hljs-string">&quot;/api/article/&quot;</span> ++ <span class="hljs-string">&quot;dummy_id&quot;</span> ++ <span class="hljs-string">&quot;/comments&quot;</span>
+    , body = <span class="hljs-type">Http</span>.emptyBody
+    , expect = <span class="hljs-type">Http</span>.expectWhatever <span class="hljs-type">SavingCommentFinished</span>
+    }
+</code></pre>
+<p> This will create a <code>POST</code> request to <code>&quot;/api/article/dummy_id/comments&quot;</code>, with an empty body,
+ and it won&apos;t care about what the server returns.
+ The argument to <code>Http.expectWhatever</code> is a message that we haven&apos;t created yet.
+ The message will have to match the type of message that <code>Http.expectWhatever</code> wants,
+ which we can see from the type signature of <code>Http.expectWhatever</code>:</p>
+<pre><code class="lang-elm"><span class="hljs-title">expectWhatever</span> : (<span class="hljs-type">Result</span> <span class="hljs-type">Error</span> () -&gt; msg) -&gt; <span class="hljs-type">Expect</span> msg
+</code></pre>
+<p><code>(Result Error () -&gt; msg)</code> means a function that takes a <code>Result Error ()</code> as an argument,
+and returns a message.
+So if we create a message <code>SavingCommentFinished</code> that takes a <code>Result Error ()</code> as an argument,
+<code>SavingCommentFinished</code> will be a constructor (a function) that takes one argument (<code>Result Error ()</code>),
+and returns a <code>Msg</code>.</p>
+<p>The <code>Error</code> type in question here is from the <code>Http</code> package
+(you can see how it&apos;s defined <a href="https://package.elm-lang.org/packages/elm/http/latest/Http#Error" target="_blank">here</a>,
+it&apos;s simply a custom type that you can pattern match on).
+So we will define our message by adding the following to our <code>Msg</code> type:</p>
+<pre><code class="lang-elm">    | <span class="hljs-type">SavingCommentFinished</span> (<span class="hljs-type">Result</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span> ())
+</code></pre>
+<ol>
+<li><p>Add the new message <code>SavingCommentFinished</code> to the <code>Msg</code> type,
+and add a case for the new message in the <code>update</code> function.
+You can just return <code>( model, Cmd.none )</code> from <code>update</code> in that case.</p>
+</li>
+<li><p>Next, we can make the actual request, by replacing <code>Cmd.none</code> with the following,
+when the &quot;Post comment&quot; button is clicked:</p>
+<pre><code class="lang-elm"> <span class="hljs-type">Http</span>.post
+     { url = <span class="hljs-string">&quot;/api/article/&quot;</span> ++ <span class="hljs-string">&quot;dummy_id&quot;</span> ++ <span class="hljs-string">&quot;/comments&quot;</span>
+     , body = <span class="hljs-type">Http</span>.emptyBody
+     , expect = <span class="hljs-type">Http</span>.expectWhatever <span class="hljs-type">SavingCommentFinished</span>
+     }
+</code></pre>
+<p> If done correctly, you can now press the &quot;Post comment&quot; button in the browser,
+ and you should se in the Elm debugger that you have recieved a message that looks something like this:</p>
+<pre><code> SavingCommentFinished (Err (BadStatus 404))
+</code></pre><p> That is what we expect, since <code>dummy_id</code> isn&apos;t a real article ID,
+ and the server therefore returns a status code of 404.</p>
+</li>
+<li><p>Let&apos;s change this, by using a real article ID!
+<code>SuccessModel</code> has an <code>article</code> field,
+every <code>Article</code> has an ID of type <code>ArticleId</code>,
+and the <code>ArticleId</code> module has a <code>toString</code> function,
+which we can use to get the ID of our article as a <code>String</code>.
+Replace the string <code>&quot;dummy_id&quot;</code> in the URL with our actual ID.</p>
+<p> If successful, you will instead see that the server returned a <code>400</code> status code,
+ resulting in the following in the Elm debugger:</p>
+<pre><code> SavingCommentFinished (Err (BadStatus 400))
+</code></pre></li>
+<li><p>Next, we will need to include the actual comment text in request, instead of an empty body.
+The <code>Http</code> module has a function for JSON bodys called <code>Http.jsonBody</code>,
+with the following type signature:</p>
+<pre><code class="lang-elm"> jsonBody : <span class="hljs-type">Json</span>.<span class="hljs-type">Encode</span>.<span class="hljs-type">Value</span> -&gt; <span class="hljs-type">Body</span>
+</code></pre>
+<p> For that function we need a <code>Json.Encode.Value</code> which is, as the name suggests,
+ a JSON encoded value, using the <code>Json.Encode</code> module.
+ Start by adding a JSON body of only <code>null</code> to the request,
+ by changing the <code>body</code> field to the following:</p>
+<pre><code class="lang-elm"> body = <span class="hljs-type">Http</span>.jsonBody <span class="hljs-type">Json</span>.<span class="hljs-type">Encode</span>.null
+</code></pre>
+<p> You might need to import the <code>Json.Encode</code> library, by adding the following line:</p>
+<pre><code class="lang-elm"><span class="hljs-keyword">import</span> Json.Encode
+</code></pre>
+<p> This request will still result in a status code of 400 from the server.</p>
+</li>
+<li><p>Since our request should actually be a JSON object (as described in the beginning of Task 2.3),
+we can use the <code>Json.Encode.object</code> function, which has the following type signature:</p>
+<pre><code class="lang-elm"> object: <span class="hljs-type">List</span> (<span class="hljs-type">String</span>, <span class="hljs-type">Value</span>) -&gt; <span class="hljs-type">Value</span>
+</code></pre>
+<p> Replace <code>Json.Encode.null</code> with a call to <code>Json.Encode.object</code>,
+ with an empty list as the argument.</p>
+</li>
+<li><p>Next, we want to add the actual commentText to our request,
+but right now we don&apos;t have access to it,
+because we haven&apos;t done a case statement on the <code>NewCommentState</code> to get access to the String.
+Add two case statements, one to get access to <code>SuccessModel</code>,
+and another to check that we are in the <code>WritingComment</code> state,
+and place the POST request in only that state.</p>
+<p> This has the added benefit of only allowing the user to send one request at a time,
+ since a click on the button in the loading state won&apos;t result in an inadvertent request.</p>
+</li>
+<li><p>The <code>(String, Value)</code> tuples in the list in the type signature of <code>Json.Encode.object</code>
+are the key and value pairs of the object.
+We only need one field in our request,
+so you can add the following tuple to the list:</p>
+<pre><code class="lang-elm"> (<span class="hljs-string">&quot;text&quot;</span>, <span class="hljs-type">Json</span>.<span class="hljs-type">Encode</span>.string commentText)
+</code></pre>
+<p> Make sure that you actually called the comment text <code>commentText</code>!</p>
+<p> If you try to push the button now, you should see the following in the Elm debugger:</p>
+<pre><code> SavingCommentFinished (Ok ())
+</code></pre><p> Which means that our request actually succeeded! Congratulations!</p>
+</li>
+<li><p>Lastly, we will set the correct value in <code>newCommentState</code>,
+depending on what the request resulted in.
+If you received an <code>Err</code>,
+you can set the <code>newCommentState</code> field to <code>ErrorSavingComment</code>,
+and if the <code>Result</code> is <code>Ok</code>, you can set the field back to <code>WritingComment</code>.</p>
+</li>
+<li><p>You should also set the <code>newCommentState</code> field to <code>SavingComment</code>
+when you receive the <code>PostCommentButtonClicked</code> and start the POST request.</p>
+</li>
+</ol>
+<h2 id="task-24-cleaning-up-the-code-for-our-request">Task 2.4: Cleaning up the code for our request</h2>
+<p>Lastly in this task, we will clean up the code a bit.
+Doing the POST request inline in the <code>update</code> function works,
+but it got a bit messy.
+We will extract the code as a function in an API module.</p>
+<p>There is already a file called <code>Api.elm</code> in the <code>src</code> directory,
+where we will move the code for our request.
+We will start by copying the code we have written there, which won&apos;t compile.
+We will then make small changes to get the app to a working state.</p>
+<ol>
+<li><p>Create a function in <code>Api.elm</code> called <code>createCommentOnArticle</code>,
+that doesn&apos;t take any arguments,
+and without a type signature (for now),
+and copy the <code>Http.post</code> function call as the body.
+This won&apos;t compile, but that&apos;s okay.
+We will fix one compilation error at a time.</p>
+</li>
+<li><p>The first compilation error is the easiest to fix:</p>
+<pre><code> I cannot find a `Json.Encode.string` variable
+</code></pre><p> To fix this error, we just have to import <code>Json.Encode</code></p>
+</li>
+<li><p>The second compilation error says that we don&apos;t have a <code>commentText</code> variable.
+Add an argument to the function called <code>commentText</code> to fix this.</p>
+</li>
+<li><p>The next compilation error we want to tackle says that we don&apos;t have a <code>article</code> variable.
+Now, we don&apos;t actually need the entire article,
+so we could just add another string as an argument,
+but that would make the function quite confusing,
+since it wouldn&apos;t be clear which of the two <code>String</code> arguments was the articleId,
+and which was the comment text.
+We therefore add <code>articleId</code> as an argument, since it is of type <code>ArticleId</code> and not <code>String</code>.
+Add the argument, and use it in the url.</p>
+</li>
+<li><p>The last compilation error is the trickiest, It says the following:</p>
+<pre><code> I cannot find a `SavingCommentFinished` variant
+</code></pre><p> Now, you might think &quot;why can&apos;t we just expose <code>Msg</code> from our article page, and import that?&quot;
+ And while that might seem natural,
+ that would actually result in another compilation error,
+ because it would cause a sircular dependency in our app
+ (meaning that the article page imports API, which imports article page, which imports API, and so on).
+ But even if we <em>could</em> do that, it wouldn&apos;t actually be such a good idea,
+ because it would couple the function for creating a comment to the article page.
+ That would mean that other modules couldn&apos;t really use that function,
+ since it would always send a <code>SavingCommentFinished</code> message when finished.</p>
+<p> What we will do instead, is the same thing that the <code>Http</code> module does
+ (and the <code>Html</code> module along with many others):
+ we will take as an argument <em>any</em> message, as long as it has the right type.
+ And what is that type? It&apos;s:</p>
+<pre><code class="lang-elm"> (<span class="hljs-type">Result</span> <span class="hljs-type">Http</span>.<span class="hljs-type">Error</span> () -&gt; msg)
+</code></pre>
+<p> So, we will add another argument to our function, and just call it <code>msg</code>.
+ These types of arguments are usually the first argument to a function.
+ So your function declaration should now look like this:</p>
+<pre><code class="lang-elm"> createCommentOnArticle msg commentText articleId =
+</code></pre>
+<p> Also make sure to use the new <code>msg</code> argument, instead of <code>SavingCommentFinished</code>.</p>
+<p> Your app should now compile again!</p>
+</li>
+<li><p>Before actually using the function, we are going to add a type annotation to it.
+Look at the other functions in the <code>Api</code> module, to try to add the correct type annotation.
+You will know it is right if your code compiles.</p>
+</li>
+<li><p>To use the function,
+we are going to have to expose it in the module declaration at the top of the file.
+So add the function to the list of exposed functions there.</p>
+</li>
+<li><p>Lastly, back in <code>src/Page/Article.elm</code>,
+replace the <code>Http.post</code> call with a call to <code>Api.createCommentOnArticle</code> with the proper arguments.</p>
+</li>
+</ol>
+<p>Your code should now compile, and if you try to click the button again, to post a comment,
+you should see another <code>SavingCommentFinished (Ok ())</code> in the Elm debugger!</p>
+<p>To double check that we actually end up sending a request, we can check the developer tools in the browser.
+Right click the page in the browser,
+and select &quot;Inspect&quot; in Chrome (or &quot;Inspect element&quot; in Firefox/Safari),
+and go to the &quot;Network&quot; tab.
+In the app, click the &quot;Post&quot; button again to see the request appear.
+You can click on the request and select the &quot;Headers&quot; tab,
+to see more info about it, like the URL and the request payload.
+And, if you select the &quot;Preview&quot;/&quot;Response&quot; tab,
+you can see what the browser returns as a response to our request.
+Turns out, there are already a lot of comments on the article, that we don&apos;t display!</p>
+<p>Next, we will get the comments from the server, and display them in our app!</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="Task-1.html" class="navigation navigation-prev " aria-label="Previous page: Task 1">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="Task-3.html" class="navigation navigation-next " aria-label="Next page: Task 3">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Task 2","level":"1.3","depth":1,"next":{"title":"Task 3","level":"1.4","depth":1,"path":"Task-3.md","ref":"Task-3.md","articles":[]},"previous":{"title":"Task 1","level":"1.2","depth":1,"path":"Task-1.md","ref":"Task-1.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56},"embedFonts":false},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Task-2.md","mtime":"2022-03-17T11:04:50.597Z","type":"markdown"},"gitbook":{"version":"3.7.1","time":"2022-03-21T13:51:41.692Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <noscript>
+        <style>
+            .honkit-cloak {
+                display: block !important;
+            }
+        </style>
+    </noscript>
+    <script>
+        // Restore sidebar state as critical path for prevent layout shift
+        function __init__getSidebarState(defaultValue){
+            var baseKey = "";
+            var key = baseKey + ":sidebar";
+            try {
+                var value = localStorage[key];
+                if (value === undefined) {
+                    return defaultValue;
+                }
+                var parsed = JSON.parse(value);
+                return parsed == null ? defaultValue : parsed;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+        function __init__restoreLastSidebarState() {
+            var isMobile = window.matchMedia("(max-width: 600px)").matches;
+            if (isMobile) {
+                // Init last state if not mobile
+                return;
+            }
+            var sidebarState = __init__getSidebarState(true);
+            var book = document.querySelector(".book");
+            // Show sidebar if it enabled
+            if (sidebarState && book) {
+                book.classList.add("without-animation", "with-summary");
+            }
+        }
+
+        try {
+            __init__restoreLastSidebarState();
+        } finally {
+            var book = document.querySelector(".book");
+            book.classList.remove("honkit-cloak");
+        }
+    </script>
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
