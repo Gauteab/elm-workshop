@@ -11,7 +11,7 @@ Your job will be to implement comments on the articles.
 Clone the repo using the following command in your terminal:
 
 ```
-git clone https://github.com/akselw/elm-workshop.git
+git clone https://github.com/Gauteab/elm-workshop-article.git
 ```
 
 This will create a directory called `elm-workshop`. Navigate to the directory:
